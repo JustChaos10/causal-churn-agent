@@ -1,0 +1,14 @@
+*.log
+.env
+.env.local
+.DS_Store
+coverage
+.vscode
+.idea
+*.tsbuildinfo
+src
+examples
+docs
+*.md
+!README.md
+tsconfig.json

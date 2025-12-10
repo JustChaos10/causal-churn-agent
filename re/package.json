@@ -1,0 +1,32 @@
+{
+  "name": "re-generative-ui",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A Generative UI framework powered by Groq - Build agentic interfaces beyond text",
+  "workspaces": [
+    "packages/*",
+    "examples/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=examples/demo",
+    "dev:api": "npm run dev --workspace=packages/api",
+    "build": "npm run build --workspaces --if-present",
+    "clean": "rm -rf node_modules packages/*/node_modules packages/*/dist examples/*/node_modules examples/*/dist"
+  },
+  "keywords": [
+    "generative-ui",
+    "groq",
+    "ai",
+    "llm",
+    "react",
+    "agents"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/react": "^18.2.45",
+    "@types/react-dom": "^18.2.18",
+    "typescript": "^5.3.3"
+  }
+}

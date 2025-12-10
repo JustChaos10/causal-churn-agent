@@ -1,0 +1,58 @@
+2025-12-09 14:03:26.899 | INFO     | retention_reasoning.api:get_agent:137 - Using Vertex AI: project=niti-prod, location=us-central1, model=gemini-2.5-pro
+2025-12-09 14:03:26.899 | INFO     | retention_reasoning.api:get_agent:147 - Using service account: C:\Users\senth\OneDrive\Desktop\Combined\service.json
+2025-12-09 14:03:30.944 | INFO     | retention_reasoning.agent:analyze_opportunity:122 - Starting reasoning analysis for opportunity: debug_test_001
+2025-12-09 14:03:30.948 | INFO     | retention_reasoning.nodes.hypothesis_generator:generate:54 - Generating hypotheses for opportunity: debug_test_001
+2025-12-09 14:03:30.948 | INFO     | retention_reasoning.nodes.hypothesis_generator:generate:70 - Calling LLM for hypothesis generation...
+2025-12-09 14:04:26.550 | INFO     | retention_reasoning.nodes.hypothesis_generator:generate:75 - LLM response length: 8154 chars
+2025-12-09 14:04:26.550 | DEBUG    | retention_reasoning.nodes.hypothesis_generator:generate:76 - LLM raw response (first 500 chars): ```json
+{
+  "hypotheses": [
+    {
+      "cause": "Increased `first_delivery_days`",
+      "effect": "Increased `churn_30d`",
+      "mechanism": "A long wait for the first order creates a poor initial experience, diminishes excitement, and prevents the customer from experiencing the product's value (the 'aha' moment). This friction in the activation phase causes them to churn before forming a habit.",
+      "confounders": [
+        "product_category",
+        "customer_location",
+        "order_v
+2025-12-09 14:04:26.551 | INFO     | retention_reasoning.nodes.hypothesis_generator:generate:82 - Parsed 6 hypotheses from response
+2025-12-09 14:04:26.551 | WARNING  | retention_reasoning.nodes.hypothesis_generator:generate:107 - Failed to parse hypothesis 1: 'Propensity Score Matching' is not a valid TestMethod
+2025-12-09 14:04:26.551 | WARNING  | retention_reasoning.nodes.hypothesis_generator:generate:107 - Failed to parse hypothesis 2: 'Propensity Score Matching' is not a valid TestMethod
+2025-12-09 14:04:26.551 | WARNING  | retention_reasoning.nodes.hypothesis_generator:generate:107 - Failed to parse hypothesis 3: 'Propensity Score Matching' is not a valid TestMethod
+2025-12-09 14:04:26.551 | WARNING  | retention_reasoning.nodes.hypothesis_generator:generate:107 - Failed to parse hypothesis 4: 'Granger Causality on time-series data' is not a valid TestMethod
+2025-12-09 14:04:26.551 | WARNING  | retention_reasoning.nodes.hypothesis_generator:generate:107 - Failed to parse hypothesis 5: 'Propensity Score Matching' is not a valid TestMethod
+2025-12-09 14:04:26.551 | WARNING  | retention_reasoning.nodes.hypothesis_generator:generate:107 - Failed to parse hypothesis 6: 'Difference-in-Differences' is not a valid TestMethod
+2025-12-09 14:04:26.551 | INFO     | retention_reasoning.nodes.hypothesis_generator:generate:110 - Generated 0 valid hypotheses
+2025-12-09 14:04:26.554 | INFO     | retention_reasoning.nodes.causal_tester:__call__:174 - Tested 0 hypotheses, 0 validated
+2025-12-09 14:04:26.556 | INFO     | retention_reasoning.nodes.confounder_analyzer:__call__:118 - Identified 0 validated causes
+2025-12-09 14:04:26.558 | INFO     | retention_reasoning.nodes.lever_estimator:__call__:25 - Lever estimation node (placeholder)
+2025-12-09 14:04:26.559 | INFO     | retention_reasoning.nodes.explanation_generator:__call__:29 - Explanation generation node (placeholder)
+2025-12-09 14:04:26.559 | INFO     | retention_reasoning.agent:analyze_opportunity:163 - Analysis complete: 0 validated hypotheses
+============================================================
+DEBUGGING LANGGRAPH AGENT PIPELINE
+============================================================
+
+[DATA] Sample data shape: (1000, 10)
+[DATA] Columns: ['customer_id', 'churn_30d', 'first_delivery_days', 'onboarding_engagement_score', 'order_value', 'product_category', 'support_tickets', 'app_sessions', 'email_opens', 'last_purchase_days']
+
+[AGENT] Created with 9 features:
+  - first_delivery_days
+  - onboarding_engagement_score
+  - order_value
+  - product_category
+  - churn_30d
+  - support_tickets
+  - app_sessions
+  - email_opens
+  - last_purchase_days
+
+[RUNNING] Starting analysis...
+
+[RESULTS]
+  Session ID: 9654e292-4d26-4a35-b514-ff323f01e2ee
+  Status: completed
+  Hypotheses count: 0
+  Hypotheses: []
+  Validated causes: []
+  Confidence: 0.0
+  Agent state: {'actionable_levers': [], 'explanation': 'Identified 0 causal factors: '}

@@ -1,0 +1,31 @@
+{
+  "name": "@re/core",
+  "version": "0.1.0",
+  "description": "Core framework for Re Generative UI with Groq integration",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch"
+  },
+  "keywords": ["generative-ui", "groq", "ai"],
+  "license": "MIT",
+  "dependencies": {
+    "groq-sdk": "^0.7.0",
+    "eventsource-parser": "^1.1.2"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.1"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0"
+  }
+}
