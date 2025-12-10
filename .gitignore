@@ -1,0 +1,86 @@
+# Dependencies
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+
+# Build outputs
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+*.env
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Test coverage
+coverage/
+.nyc_output/
+htmlcov/
+.pytest_cache/
+.coverage
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Cache
+.cache/
+.parcel-cache/
+.turbo/
+
+# Package manager locks (optional - uncomment if you want to exclude)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints/
+
+# Artifacts and brain files
+.gemini/
+
+# Large data files (optional)
+# *.csv
+# *.parquet
+
+# Secrets and credentials
+*.pem
+*.key
+secrets.json
+credentials.json
+service.json
