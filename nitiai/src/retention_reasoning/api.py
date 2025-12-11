@@ -172,22 +172,48 @@ def get_agent() -> RetentionReasoningAgent:
 
 
 def create_sample_data() -> pd.DataFrame:
-    """Create sample customer data for demo."""
+    """Load actual customer data from CSV for analysis."""
+    from pathlib import Path
+    
+    # Try to find the CSV file
+    possible_paths = [
+        Path(__file__).parent.parent.parent.parent.parent / "data" / "retention_customers.csv",
+        Path("data/retention_customers.csv"),
+        Path("../data/retention_customers.csv"),
+        Path("../../data/retention_customers.csv"),
+    ]
+    
+    for csv_path in possible_paths:
+        if csv_path.exists():
+            logger.info(f"Loading data from {csv_path}")
+            df = pd.read_csv(csv_path)
+            
+            # Ensure churn_flag is numeric and rename for compatibility
+            if 'churn_flag' in df.columns:
+                df['churn_flag'] = pd.to_numeric(df['churn_flag'], errors='coerce').fillna(0).astype(int)
+            
+            logger.info(f"Loaded {len(df)} rows with columns: {list(df.columns)}")
+            return df
+    
+    # Fallback to synthetic data matching real column names
+    logger.warning("CSV not found, generating synthetic data with real column names")
     import numpy as np
     np.random.seed(42)
     
-    n = 1000
+    n = 600
+    channels = ["Google Ads", "Meta Ads", "Referral", "Organic"]
+    regions = ["UK", "US", "CA", "IN", "AU", "EU_Other"]
+    brands = ["brand_a", "brand_b", "brand_c"]
+    
     return pd.DataFrame({
-        "customer_id": [f"cust_{i}" for i in range(n)],
-        "churn_30d": np.random.binomial(1, 0.2, n),
-        "first_delivery_days": np.random.exponential(5, n),
-        "onboarding_engagement_score": np.random.uniform(0, 100, n),
-        "order_value": np.random.lognormal(4, 1, n),
-        "product_category": np.random.choice(["electronics", "clothing", "food", "other"], n),
-        "support_tickets": np.random.poisson(1, n),
-        "app_sessions": np.random.poisson(10, n),
-        "email_opens": np.random.poisson(5, n),
-        "last_purchase_days": np.random.exponential(30, n),
+        "customer_id": [f"C{str(i).zfill(4)}" for i in range(n)],
+        "brand_id": np.random.choice(brands, n),
+        "acquisition_channel": np.random.choice(channels, n),
+        "region": np.random.choice(regions, n),
+        "r_score": np.random.randint(1, 6, n),
+        "f_score": np.random.randint(1, 6, n),
+        "m_score": np.random.randint(1, 6, n),
+        "churn_flag": np.random.binomial(1, 0.55, n),  # ~55% churn rate
     })
 
 
