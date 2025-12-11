@@ -23,7 +23,8 @@
 - 🔍 **Causal Reasoning**: Goes beyond correlation to identify true causal drivers of churn
 - 💬 **Natural Language Interface**: Ask questions in plain English about your retention data
 - 📈 **RFM Analytics**: Recency, Frequency, Monetary score analysis for customer segmentation
-- 🎯 **Actionable Levers**: Specific recommendations with estimated impact percentages
+- 🎯 **Actionable Levers**: Impact scoring with ROI-based prioritization (effect size, p-value, sample size)
+- 📝 **LLM-Powered Explanations**: Rich causal chain explanations with key insights and recommendations
 - ⚡ **Streaming Responses**: Real-time typewriter text effect with skeleton loading
 - 🌙 **Modern UI**: Enterprise-grade dark theme with ChatGPT-inspired aesthetics
 
@@ -215,13 +216,21 @@ data: {"done": true}
 
 ## 🧪 Testing
 
-Run the test suite to verify data accuracy:
+To test the application:
 
-```bash
-python test_15_prompts.py
-```
+1. **Start both servers** (backend on 8000, frontend on 3000)
+2. **Basic queries**: Ask "What is our overall churn rate?" → Should show 54.5%
+3. **Causal analysis**: Ask "Why are customers churning?" → Triggers LangGraph agent
 
-This tests 15 different queries against ground truth values from the CSV.
+### Verified Queries
+
+| Query | Expected Result |
+|-------|----------------|
+| Overall churn rate | 54.5% |
+| Total customers | 600 |
+| Churned customers | 327 |
+| Highest churn channel | Referral (65.6%) |
+| Lowest churn channel | Google Ads (50.0%) |
 
 ## 🤝 Contributing
 
