@@ -1456,3 +1456,27 @@ body {
     color: var(--text-secondary);
     font-size: 14px;
 }
+
+/* ============================================================================
+   Error Block
+   ============================================================================ */
+
+.c1-error-block {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid var(--error);
+    border-radius: var(--radius-md);
+    margin: var(--space-3) 0;
+}
+
+.c1-error-icon {
+    font-size: 18px;
+}
+
+.c1-error-message {
+    color: var(--error);
+    font-size: 14px;
+}

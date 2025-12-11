@@ -724,6 +724,14 @@ function renderComponent(component: UIComponent, apiEndpoint: string): React.Rea
       );
     }
 
+    case 'error':
+      return (
+        <div className="c1-error-block">
+          <span className="c1-error-icon">⚠️</span>
+          <span className="c1-error-message">{component.props.message as string || 'An error occurred'}</span>
+        </div>
+      );
+
     case 'loading':
       return (
         <div className="c1-loading-indicator">
