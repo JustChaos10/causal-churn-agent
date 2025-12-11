@@ -98,17 +98,15 @@ app.include_router(chat_router)
 # In-memory session store (replace with Redis in production)
 sessions: dict[str, dict] = {}
 
-# Sample features for demo
+# Sample features from retention_customers.csv
 SAMPLE_FEATURES = [
-    "first_delivery_days",
-    "onboarding_engagement_score",
-    "order_value",
-    "product_category",
-    "churn_30d",
-    "support_tickets",
-    "app_sessions",
-    "email_opens",
-    "last_purchase_days",
+    "acquisition_channel",  # Google Ads, Meta Ads, Referral, Organic
+    "region",               # UK, US, CA, IN, AU, EU_Other
+    "brand_id",             # brand_a, brand_b, brand_c
+    "r_score",              # Recency score (1-5)
+    "f_score",              # Frequency score (1-5)
+    "m_score",              # Monetary score (1-5)
+    "churn_flag",           # 0 = retained, 1 = churned
 ]
 
 
