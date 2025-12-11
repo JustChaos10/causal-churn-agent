@@ -66,27 +66,33 @@ def generate_hypothesis_prompt(
     return f"""
 {opportunity_context}
 
-## Available Features
-The following features are available in the enriched_customers dataset:
+## Available Features in Your Dataset
+The following columns are available in the customer data:
 {feature_list}
-... and {len(available_features)} total features.
+
+IMPORTANT: You must ONLY use these exact feature names as causes/effects. Do NOT invent columns that don't exist.
 
 {business_section}
 
 ## Task
-Generate 5-10 testable causal hypotheses that could explain this retention issue.
+Generate 5-10 testable causal hypotheses using ONLY the features listed above.
 
-Focus on:
-1. Behavioral patterns (engagement, usage, frequency)
-2. Product experience (delivery, quality, support)
-3. Economic factors (price sensitivity, promotions, value perception)
-4. Lifecycle timing (onboarding, activation, habit formation)
+STRICT RULES:
+1. The "cause" field MUST be one of the features listed above
+2. The "effect" field should be "churn_flag" (the outcome variable)
+3. DO NOT use columns like "first_delivery_days", "onboarding_engagement_score", "support_tickets" - they do NOT exist
+4. Focus on: acquisition_channel, region, brand_id, r_score, f_score, m_score
 
 For each hypothesis:
-- Be specific about the causal variable (not vague like "customer satisfaction")
+- Use EXACT column names from the available features list
 - Explain the causal mechanism clearly
-- Identify potential confounders that could create spurious correlation
+- Identify potential confounders from the same feature list
 - Suggest appropriate statistical tests
+
+Example valid hypothesis:
+- cause: "acquisition_channel" (exists in data)
+- effect: "churn_flag" (exists in data)
+- mechanism: "Customers from Referral channel may have different expectations..."
 
 Return ONLY a JSON object with the hypotheses array. No other text.
 """.strip()
