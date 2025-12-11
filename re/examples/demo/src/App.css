@@ -1427,3 +1427,32 @@ body {
 .c1-legend-item:hover .c1-legend-value {
     color: var(--accent);
 }
+
+/* ============================================================================
+   Loading Indicator (for streaming)
+   ============================================================================ */
+
+.c1-loading-indicator {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    background: var(--bg-surface);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+    margin: var(--space-3) 0;
+}
+
+.c1-loading-indicator .c1-loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+.c1-loading-indicator .c1-loading-text {
+    color: var(--text-secondary);
+    font-size: 14px;
+}

@@ -724,6 +724,14 @@ function renderComponent(component: UIComponent, apiEndpoint: string): React.Rea
       );
     }
 
+    case 'loading':
+      return (
+        <div className="c1-loading-indicator">
+          <div className="c1-loading-spinner"></div>
+          <span className="c1-loading-text">{component.props.message as string || 'Loading...'}</span>
+        </div>
+      );
+
     default:
       return (
         <div className="c1-text-block">
@@ -750,7 +758,7 @@ function App() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const apiEndpoint = 'http://localhost:8000';
+  const apiEndpoint = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
   // Theme toggle
   const toggleTheme = () => {
@@ -908,8 +916,11 @@ function App() {
                   if (streamedComponents.length === 0) {
                     const updatedMessage = {
                       ...assistantMessage,
-                      content: 'Thinking...',
-                      components: [],
+                      content: '',
+                      components: [{
+                        type: 'loading',
+                        props: { message: 'Analyzing your question...' }
+                      }],
                     };
 
                     streamingConvo = {
