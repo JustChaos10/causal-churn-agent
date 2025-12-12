@@ -6,10 +6,13 @@ import React from 'react';
 import { Chart } from './Chart';
 import { StatCard } from './StatCard';
 import { ReasoningGraph } from './ReasoningGraph';
+import { Alert } from './Alert';
+import { Progress } from './Progress';
+import { Badge } from './Badge';
 import type { ReasoningSession } from '@re/core';
 
 export interface UIComponent {
-    type: 'stat' | 'chart' | 'table' | 'text' | 'reasoning' | 'error';
+    type: 'stat' | 'chart' | 'table' | 'text' | 'reasoning' | 'error' | 'suggestions' | 'alert' | 'progress' | 'hypothesis' | 'lever' | 'badge';
     props: Record<string, unknown>;
 }
 
@@ -33,6 +36,46 @@ export function DynamicRenderer({
             ))}
         </div>
     );
+}
+
+function ReasoningBlock({
+    query,
+    trigger,
+    session,
+    onReasoningTrigger,
+}: {
+    query?: string;
+    trigger?: boolean;
+    session?: ReasoningSession | null;
+    onReasoningTrigger?: (query: string) => void;
+}) {
+    const hasFiredRef = React.useRef(false);
+    const lastKeyRef = React.useRef<string | undefined>(undefined);
+
+    React.useEffect(() => {
+        const key = query;
+        if (key !== lastKeyRef.current) {
+            hasFiredRef.current = false;
+            lastKeyRef.current = key;
+        }
+        if (trigger && query && onReasoningTrigger && !hasFiredRef.current) {
+            hasFiredRef.current = true;
+            onReasoningTrigger(query);
+        }
+    }, [trigger, query, onReasoningTrigger]);
+
+    if (trigger) {
+        return (
+            <div className="re-reasoning-loading">
+                <div className="re-spinner"></div>
+                <p>Analyzing causal relationships...</p>
+            </div>
+        );
+    }
+    if (session) {
+        return <ReasoningGraph session={session} />;
+    }
+    return <div className="re-reasoning-placeholder">Reasoning results will appear here...</div>;
 }
 
 function renderComponent(
@@ -101,25 +144,104 @@ function renderComponent(
             );
 
         case 'reasoning':
-            if (component.props.trigger && onReasoningTrigger) {
-                onReasoningTrigger(component.props.query as string);
-                return (
-                    <div className="re-reasoning-loading">
-                        <div className="re-spinner"></div>
-                        <p>Analyzing causal relationships...</p>
-                    </div>
-                );
-            }
-            if (session) {
-                return <ReasoningGraph session={session} />;
-            }
-            return <div className="re-reasoning-placeholder">Reasoning results will appear here...</div>;
+            return (
+                <ReasoningBlock
+                    trigger={component.props.trigger as boolean | undefined}
+                    query={component.props.query as string | undefined}
+                    session={session}
+                    onReasoningTrigger={onReasoningTrigger}
+                />
+            );
 
         case 'error':
             return (
                 <div className="re-error-block">
                     <span className="re-error-icon">⚠️</span>
                     <p>{component.props.message as string}</p>
+                </div>
+            );
+
+        case 'suggestions':
+            return (
+                <div className="re-suggestions-block">
+                    <h4 className="re-suggestions-title">
+                        {(component.props.title as string) || 'Related questions'}
+                    </h4>
+                    <ul className="re-suggestions-list">
+                        {((component.props.items as string[]) || []).map((item, i) => (
+                            <li key={i}>{item}</li>
+                        ))}
+                    </ul>
+                </div>
+            );
+
+        case 'alert':
+            return (
+                <Alert
+                    props={{
+                        title: component.props.title as string,
+                        message: component.props.message as string,
+                        variant: (component.props.variant as 'info' | 'success' | 'warning' | 'error') || 'info',
+                    }}
+                />
+            );
+
+        case 'progress':
+            return (
+                <Progress
+                    props={{
+                        value: component.props.value as number,
+                        max: (component.props.max as number) || 100,
+                        label: component.props.label as string,
+                        showPercentage: component.props.showPercentage as boolean,
+                    }}
+                />
+            );
+
+        case 'badge':
+            return (
+                <Badge
+                    props={{
+                        label: component.props.label as string,
+                        variant: (component.props.variant as 'default' | 'success' | 'warning' | 'error' | 'info') || 'default',
+                    }}
+                />
+            );
+
+        case 'hypothesis':
+            // Simplified hypothesis display - LLM can generate this directly
+            return (
+                <div className="re-hypothesis-simple">
+                    <div className="re-hypothesis-header">
+                        <span className="re-hypothesis-cause">{component.props.cause as string}</span>
+                        <span className="re-hypothesis-arrow">→</span>
+                        <span className="re-hypothesis-effect">{component.props.effect as string}</span>
+                    </div>
+                    <p className="re-hypothesis-mechanism">{component.props.mechanism as string}</p>
+                    {typeof component.props.confidence === 'string' && (
+                        <span className={`re-badge re-badge-${component.props.confidence === 'high' ? 'success' : component.props.confidence === 'medium' ? 'warning' : 'info'}`}>
+                            {component.props.confidence} confidence
+                        </span>
+                    )}
+                </div>
+            );
+
+        case 'lever':
+            // Simplified lever/recommendation display
+            return (
+                <div className="re-lever-simple">
+                    <div className="re-lever-header">
+                        <h4 className="re-lever-name">{component.props.name as string}</h4>
+                        <span className={`re-badge re-badge-${component.props.effort === 'low' ? 'success' : component.props.effort === 'medium' ? 'warning' : 'error'}`}>
+                            {component.props.effort as string} effort
+                        </span>
+                    </div>
+                    <p className="re-lever-description">{component.props.description as string}</p>
+                    {typeof component.props.impact === 'string' && (
+                        <div className="re-lever-impact">
+                            Expected impact: <strong>{component.props.impact}</strong>
+                        </div>
+                    )}
                 </div>
             );
 

@@ -17,13 +17,22 @@ from ..models.hypothesis import Confidence, TestMethod, TestResult
 class StatisticalTests:
     """Implements various causal inference statistical tests."""
 
-    def __init__(self, significance_level: float = 0.20):
+    def __init__(self, significance_level: float = 0.05):
         """Initialize statistical tests.
 
         Args:
-            significance_level: Significance level for hypothesis testing (default: 0.20 for demo)
+            significance_level: Significance level for hypothesis testing
         """
         self.significance_level = significance_level
+
+    def _prepare_matrix(self, df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
+        """Prepare a numeric design matrix with one-hot encoding."""
+        X = df[columns].copy()
+        for col in X.columns:
+            if X[col].dtype == bool:
+                X[col] = X[col].astype(int)
+        X = pd.get_dummies(X, drop_first=True)
+        return X
 
     def granger_causality(
         self,
@@ -120,13 +129,8 @@ class StatisticalTests:
         """
         try:
             # Prepare data
-            data = pd.DataFrame(
-                {
-                    "treatment": treatment,
-                    "outcome": outcome,
-                }
-            )
-            data = pd.concat([data, confounders], axis=1).dropna()
+            base = pd.DataFrame({"treatment": treatment, "outcome": outcome})
+            data = pd.concat([base, confounders], axis=1).dropna()
 
             if len(data) < 50:
                 return TestResult(
@@ -137,8 +141,22 @@ class StatisticalTests:
                     warnings=["Insufficient sample size for matching (< 50)"],
                 )
 
+            # Ensure binary treatment
+            treatment_series = data["treatment"]
+            if treatment_series.dtype == bool:
+                treatment_series = treatment_series.astype(int)
+            unique_vals = sorted(treatment_series.dropna().unique().tolist())
+            warnings_list: list[str] = []
+            if len(unique_vals) > 2:
+                median_val = float(treatment_series.median())
+                treatment_series = (treatment_series > median_val).astype(int)
+                warnings_list.append(
+                    f"Treatment was non-binary; binarized at median={median_val:.3f}"
+                )
+            data["treatment"] = treatment_series
+
             # Estimate propensity scores
-            X = data[confounders.columns]
+            X = self._prepare_matrix(data, list(confounders.columns))
             scaler = StandardScaler()
             X_scaled = scaler.fit_transform(X)
 
@@ -188,8 +206,8 @@ class StatisticalTests:
 
             # Covariate balance (lower is better, < 0.1 is good)
             balance_score = self._calculate_balance(
-                data.loc[treated_idx, confounders.columns],
-                data.loc[control_idx, confounders.columns],
+                X.loc[treated_idx],
+                X.loc[control_idx],
             )
 
             confidence = self._determine_confidence(p_value, len(treated_outcomes), abs(effect_size))
@@ -214,7 +232,10 @@ class StatisticalTests:
                     "n_control": len(control_outcomes),
                     "avg_match_distance": distances.mean(),
                 },
-                warnings=["Balance score high (> 0.2), results may be biased"] if balance_score > 0.2 else [],
+                warnings=(
+                    warnings_list
+                    + (["Balance score high (> 0.2), results may be biased"] if balance_score > 0.2 else [])
+                ),
             )
 
         except Exception as e:
@@ -248,13 +269,8 @@ class StatisticalTests:
             from sklearn.linear_model import LinearRegression
 
             # Prepare data
-            data = pd.DataFrame(
-                {
-                    "treatment": treatment,
-                    "outcome": outcome,
-                }
-            )
-            data = pd.concat([data, controls], axis=1).dropna()
+            base = pd.DataFrame({"treatment": treatment, "outcome": outcome})
+            data = pd.concat([base, controls], axis=1).dropna()
 
             if len(data) < 30:
                 return TestResult(
@@ -265,15 +281,28 @@ class StatisticalTests:
                     warnings=["Insufficient sample size for regression (< 30)"],
                 )
 
-            # Fit regression model
-            X = data[["treatment"] + list(controls.columns)]
+            # Build design matrix with encoding
+            treatment_series = data["treatment"]
+            if treatment_series.dtype == bool:
+                treatment_series = treatment_series.astype(int)
+            controls_encoded = self._prepare_matrix(data, list(controls.columns))
+            X = pd.concat([treatment_series.reset_index(drop=True), controls_encoded.reset_index(drop=True)], axis=1)
+            X.columns = ["treatment"] + list(controls_encoded.columns)
             y = data["outcome"]
+            if y.dtype == bool:
+                y = y.astype(int)
 
-            model = LinearRegression()
+            is_binary_outcome = sorted(y.dropna().unique().tolist()) in ([0, 1], [0], [1])
+
+            if is_binary_outcome:
+                # Logistic regression for binary churn outcomes
+                model = LogisticRegression(max_iter=1000)
+            else:
+                model = LinearRegression()
             model.fit(X, y)
 
             # Extract treatment coefficient
-            treatment_coef = model.coef_[0]
+            treatment_coef = float(model.coef_[0])
 
             # Bootstrap for standard errors
             n_bootstrap = 1000
@@ -282,9 +311,9 @@ class StatisticalTests:
                 indices = np.random.choice(len(data), size=len(data), replace=True)
                 X_boot = X.iloc[indices]
                 y_boot = y.iloc[indices]
-                boot_model = LinearRegression()
+                boot_model = LogisticRegression(max_iter=1000) if is_binary_outcome else LinearRegression()
                 boot_model.fit(X_boot, y_boot)
-                bootstrap_coefs.append(boot_model.coef_[0])
+                bootstrap_coefs.append(float(boot_model.coef_[0]))
 
             treatment_se = np.std(bootstrap_coefs)
             t_stat = treatment_coef / treatment_se if treatment_se > 0 else 0
@@ -294,7 +323,7 @@ class StatisticalTests:
 
             # Effect size
             outcome_std = y.std()
-            effect_size = abs(treatment_coef / outcome_std) if outcome_std > 0 else 0
+            effect_size = abs(treatment_coef / outcome_std) if outcome_std > 0 else abs(treatment_coef)
 
             confidence = self._determine_confidence(p_value, len(data), effect_size)
 
@@ -315,8 +344,9 @@ class StatisticalTests:
                 sample_size=len(data),
                 test_statistics={
                     "t_statistic": t_stat,
-                    "r_squared": model.score(X, y),
+                    "model_score": model.score(X, y),
                     "n_controls": len(controls.columns),
+                    "outcome_type": "binary" if is_binary_outcome else "continuous",
                 },
             )
 
@@ -362,10 +392,9 @@ class StatisticalTests:
         Returns:
             Confidence level (low, medium, high)
         """
-        # Relaxed thresholds for demo
-        if p_value > 0.30 or sample_size < 20:
+        if p_value > 0.10 or sample_size < 30:
             return Confidence.LOW
-        elif p_value < 0.10 and sample_size >= 50 and effect_size >= 0.3:
+        elif p_value < 0.05 and sample_size >= 100 and effect_size >= 0.2:
             return Confidence.HIGH
         else:
             return Confidence.MEDIUM
@@ -408,11 +437,13 @@ class StatisticalTests:
         weights_normalized = weights_arr / weights_arr.sum()
         pooled_effect_size = np.average(effect_sizes, weights=weights_normalized)
 
-        # Consensus on causality - for demo, validate if ANY test shows effect
         significant_count = sum(1 for r in test_results if r.is_significant)
-        # More lenient: validate if any test is significant OR if effect size > 0.1
-        has_effect = any(r.effect_size and r.effect_size > 0.1 for r in test_results)
-        consensus_causal = significant_count > 0 or has_effect
+        n_tests = len(test_results)
+        majority_significant = significant_count >= max(1, (n_tests + 1) // 2)
+        consensus_causal = majority_significant and abs(pooled_effect_size) >= 0.1
+
+        p_values = [r.p_value for r in test_results if r.p_value is not None]
+        avg_p_value = float(np.mean(p_values)) if p_values else None
 
         # Aggregate confidence
         confidence_scores = {
@@ -438,8 +469,9 @@ class StatisticalTests:
             "effect_size": pooled_effect_size,
             "confidence": consensus_confidence,
             "effect_direction": consensus_direction,
-            "n_tests": len(test_results),
+            "n_tests": n_tests,
             "n_significant": significant_count,
+            "avg_p_value": avg_p_value,
             "individual_results": [
                 {
                     "method": r.method.value,

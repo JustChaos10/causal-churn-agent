@@ -143,32 +143,37 @@ class LeverEstimatorNode:
             List of SimpleLever objects with impact scores
         """
         levers = []
-        
-        # Extract effect sizes and p-values from validated hypotheses
-        effect_sizes = []
-        p_values = []
-        
+
+        # Global fallback averages
+        global_effects: list[float] = []
+        global_pvalues: list[float] = []
         for hypothesis in validated_hypotheses:
-            if hasattr(hypothesis, 'test_results') and hypothesis.test_results:
-                for result in hypothesis.test_results:
-                    if hasattr(result, 'effect_size'):
-                        effect_sizes.append(abs(result.effect_size))
-                    if hasattr(result, 'p_value'):
-                        p_values.append(result.p_value)
-        
-        # Average effect size and p-value for scoring
-        # Default to reasonable values if no test results
-        avg_effect = sum(effect_sizes) / len(effect_sizes) if effect_sizes else 0.35
-        avg_pvalue = sum(p_values) / len(p_values) if p_values else 0.05
-        
-        for i, lever_name in enumerate(actionable_levers):
-            # Slightly vary the impact for each lever to create ranking variety
-            # First lever gets highest base impact, decreasing slightly
-            variation = 1.0 - (i * 0.08)
-            effect_for_lever = min(1.0, avg_effect * variation)
-            
+            for result in getattr(hypothesis, "test_results", []) or []:
+                if getattr(result, "effect_size", None) is not None:
+                    global_effects.append(abs(float(result.effect_size)))
+                if getattr(result, "p_value", None) is not None:
+                    global_pvalues.append(float(result.p_value))
+        global_avg_effect = sum(global_effects) / len(global_effects) if global_effects else 0.25
+        global_avg_p = sum(global_pvalues) / len(global_pvalues) if global_pvalues else 0.05
+
+        for lever_name in actionable_levers:
+            # Collect evidence tied to this lever
+            lever_effects: list[float] = []
+            lever_pvalues: list[float] = []
+            for hypothesis in validated_hypotheses:
+                actionable = getattr(getattr(hypothesis, "causal_structure", None), "actionable_lever", None)
+                if actionable == lever_name or getattr(hypothesis, "cause", None) == lever_name:
+                    for result in getattr(hypothesis, "test_results", []) or []:
+                        if getattr(result, "effect_size", None) is not None:
+                            lever_effects.append(abs(float(result.effect_size)))
+                        if getattr(result, "p_value", None) is not None:
+                            lever_pvalues.append(float(result.p_value))
+
+            avg_effect = sum(lever_effects) / len(lever_effects) if lever_effects else global_avg_effect
+            avg_pvalue = sum(lever_pvalues) / len(lever_pvalues) if lever_pvalues else global_avg_p
+
             impact_score = self._calculate_impact_score(
-                effect_size=effect_for_lever,
+                effect_size=min(1.0, avg_effect),
                 p_value=avg_pvalue,
                 sample_size=sample_size,
             )

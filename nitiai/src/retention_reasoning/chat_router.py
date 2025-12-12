@@ -129,6 +129,21 @@ Respond with a JSON object containing UI components:
 5. **reasoning**: Causal analysis (for "why" questions)
    {{"type": "reasoning", "props": {{"trigger": true, "query": "the user's question"}}}}
 
+6. **alert**: Important notices or warnings
+   {{"type": "alert", "props": {{"title": "⚠️ Warning", "message": "High churn detected", "variant": "warning|error|success|info"}}}}
+
+7. **progress**: Show progress or completion metrics
+   {{"type": "progress", "props": {{"value": 75, "max": 100, "label": "Retention Rate", "showPercentage": true}}}}
+
+8. **hypothesis**: Causal hypothesis (use for explaining cause-effect relationships)
+   {{"type": "hypothesis", "props": {{"cause": "Low engagement", "effect": "Customer churn", "mechanism": "Users who don't engage in first 7 days are 3x more likely to churn", "confidence": "high|medium|low"}}}}
+
+9. **lever**: Actionable recommendation
+   {{"type": "lever", "props": {{"name": "Improve Onboarding", "description": "Send personalized welcome emails within 24 hours", "effort": "low|medium|high", "impact": "+15% retention"}}}}
+
+10. **suggestions**: Related follow-up questions
+    {{"type": "suggestions", "props": {{"title": "Related questions", "items": ["What causes churn?", "Show churn by region"]}}}}
+
 EXAMPLE - Metric Query:
 User: "What is the churn rate?"
 {{"components": [

@@ -22,8 +22,11 @@ class CausalInferenceEngine:
 
     def __init__(self):
         """Initialize causal inference engine."""
+        self.heuristic_mode = not DOWHY_AVAILABLE
         if not DOWHY_AVAILABLE:
-            raise ImportError("DoWhy is required. Install with: pip install dowhy")
+            warnings.warn(
+                "DoWhy not available. Falling back to heuristic causal analysis."
+            )
 
     def build_causal_dag(
         self,

@@ -80,17 +80,8 @@ class ConfounderAnalyzerNode:
 
         return analyzed_hypotheses
 
-    def __call__(self, state: dict[str, Any]) -> dict[str, Any]:
-        """LangGraph node function (sync wrapper).
-
-        Args:
-            state: Graph state
-
-        Returns:
-            Updated state
-        """
-        import asyncio
-
+    async def __call__(self, state: dict[str, Any]) -> dict[str, Any]:
+        """LangGraph node function (async)."""
         validated_hypotheses = state.get("validated_hypotheses", [])
         data = state.get("data")
 
@@ -98,9 +89,7 @@ class ConfounderAnalyzerNode:
             logger.error("No data provided for confounder analysis")
             return state
 
-        analyzed_hypotheses = asyncio.run(
-            self.analyze_all_hypotheses(validated_hypotheses, data)
-        )
+        analyzed_hypotheses = await self.analyze_all_hypotheses(validated_hypotheses, data)
 
         # Extract validated causes and actionable levers
         validated_causes = []
@@ -114,6 +103,14 @@ class ConfounderAnalyzerNode:
         state["validated_hypotheses"] = analyzed_hypotheses
         state["validated_causes"] = list(set(validated_causes))
         state["actionable_levers"] = list(set(actionable_levers))
+
+        if getattr(self.causal_engine, "heuristic_mode", False):
+            warnings_list = state.get("warnings", []) or []
+            warnings_list.append(
+                "Heuristic causal mode: DoWhy unavailable, confidence downgraded."
+            )
+            state["warnings"] = warnings_list
+            state["heuristic_mode"] = True
 
         logger.info(
             f"Identified {len(state['validated_causes'])} validated causes"

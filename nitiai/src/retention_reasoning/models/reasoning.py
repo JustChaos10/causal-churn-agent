@@ -145,8 +145,9 @@ class ReasoningSession(BaseModel):
         self.status = "completed"
         self.completed_at = datetime.utcnow()
         self.updated_at = datetime.utcnow()
+        # Accept truthy validated flags (may be non-bool types)
         self.validated_hypotheses_count = sum(
-            1 for h in self.hypotheses if h.validated is True
+            1 for h in self.hypotheses if bool(h.validated)
         )
 
     def mark_failed(self, error: str) -> None:

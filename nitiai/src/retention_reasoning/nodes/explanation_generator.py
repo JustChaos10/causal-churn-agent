@@ -205,43 +205,29 @@ Generate a clear, actionable explanation in JSON format."""
             "confidence_note": "Based on statistical analysis of available data."
         }
 
-    def __call__(self, state: dict[str, Any]) -> dict[str, Any]:
-        """LangGraph node function.
-
-        Args:
-            state: Graph state
-
-        Returns:
-            Updated state
-        """
-        import asyncio
-        
+    async def __call__(self, state: dict[str, Any]) -> dict[str, Any]:
+        """LangGraph node function (async)."""
         logger.info("Generating explanation...")
-        
-        # Generate explanation (async)
-        try:
-            explanation = asyncio.run(self.generate_explanation(state))
-        except RuntimeError:
-            # Already in async context
-            explanation = self._generate_simple_explanation(state)
-        
+
+        explanation = await self.generate_explanation(state)
+
         # Store both structured and text explanation
         state["explanation_data"] = explanation
-        
+
         # Create text summary for backward compatibility
         summary = explanation.get("summary", "")
         key_insight = explanation.get("key_insight", "")
-        
+
         text_explanation = f"{summary}\n\nKey Insight: {key_insight}"
-        
+
         if explanation.get("recommended_actions"):
             text_explanation += "\n\nRecommended Actions:"
             for action in explanation["recommended_actions"]:
                 text_explanation += f"\n- {action['action']} ({action['priority']} priority)"
-        
+
         state["explanation"] = text_explanation
-        
+
         logger.info("Explanation generated successfully")
         logger.debug(f"Explanation: {text_explanation[:200]}...")
-        
+
         return state

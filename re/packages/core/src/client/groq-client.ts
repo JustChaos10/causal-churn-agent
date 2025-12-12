@@ -148,6 +148,8 @@ export class GroqClient {
     });
 
     let buffer = '';
+    let lastComponentsJson: string | null = null;
+    let lastMetadataJson: string | null = null;
 
     for await (const chunk of stream) {
       const content = chunk.choices[0]?.delta?.content;
@@ -158,10 +160,18 @@ export class GroqClient {
         try {
           const partial = JSON.parse(buffer);
           if (partial.components) {
-            yield { type: 'components', data: partial.components };
+            const json = JSON.stringify(partial.components);
+            if (json !== lastComponentsJson) {
+              lastComponentsJson = json;
+              yield { type: 'components', data: partial.components };
+            }
           }
           if (partial.metadata) {
-            yield { type: 'metadata', data: partial.metadata };
+            const json = JSON.stringify(partial.metadata);
+            if (json !== lastMetadataJson) {
+              lastMetadataJson = json;
+              yield { type: 'metadata', data: partial.metadata };
+            }
           }
         } catch {
           // Not yet complete JSON, continue buffering

@@ -188,24 +188,16 @@ class HypothesisGeneratorNode:
             logger.debug(f"Response text: {response_text[:500]}")
             return {"hypotheses": []}
 
-    def __call__(self, state: dict[str, Any]) -> dict[str, Any]:
-        """LangGraph node function (sync wrapper).
+    async def __call__(self, state: dict[str, Any]) -> dict[str, Any]:
+        """LangGraph node function.
 
-        Args:
-            state: Graph state
-
-        Returns:
-            Updated state
+        This node is async to avoid calling asyncio.run inside an active loop.
         """
-        import asyncio
-
         opportunity = state["opportunity"]
         session_id = state["session_id"]
         business_context = state.get("business_context")
 
-        hypotheses = asyncio.run(
-            self.generate(opportunity, session_id, business_context)
-        )
+        hypotheses = await self.generate(opportunity, session_id, business_context)
 
         state["hypotheses"] = hypotheses
         state["hypotheses_count"] = len(hypotheses)

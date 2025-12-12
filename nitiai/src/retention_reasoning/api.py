@@ -250,8 +250,11 @@ async def analyze_query(request: SimpleQueryRequest):
             severity="medium",
         )
         
-        # Get sample data
-        data = create_sample_data()
+        # Get real data if available, else fall back to sample
+        from .data_query import get_data
+        data = get_data()
+        if data.empty:
+            data = create_sample_data()
         
         # Create agent and run analysis
         agent = get_agent()
@@ -378,8 +381,10 @@ async def analyze(request: AnalyzeRequest):
             severity=opp_data.get("severity", "medium"),
         )
         
-        # Get sample data
-        data = create_sample_data()
+        from .data_query import get_data
+        data = get_data()
+        if data.empty:
+            data = create_sample_data()
         
         # Create agent and run analysis
         agent = get_agent()
@@ -435,7 +440,10 @@ async def analyze_stream(data: str):
                 severity=opp_data.get("severity", "medium"),
             )
             
-            data = create_sample_data()
+            from .data_query import get_data
+            data = get_data()
+            if data.empty:
+                data = create_sample_data()
             agent = get_agent()
             
             # Run analysis

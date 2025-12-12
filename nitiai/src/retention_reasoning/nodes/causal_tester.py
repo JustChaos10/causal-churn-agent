@@ -142,28 +142,18 @@ class CausalTesterNode:
 
         return tested_hypotheses
 
-    def __call__(self, state: dict[str, Any]) -> dict[str, Any]:
-        """LangGraph node function (sync wrapper).
-
-        Args:
-            state: Graph state
-
-        Returns:
-            Updated state
-        """
-        import asyncio
-
+    async def __call__(self, state: dict[str, Any]) -> dict[str, Any]:
+        """LangGraph node function (async)."""
         hypotheses = state.get("hypotheses", [])
         data = state.get("data")
 
         if data is None:
             logger.error("No data provided for hypothesis testing")
             state["validated_hypotheses"] = []
+            state["validated_count"] = 0
             return state
 
-        tested_hypotheses = asyncio.run(
-            self.test_all_hypotheses(hypotheses, data)
-        )
+        tested_hypotheses = await self.test_all_hypotheses(hypotheses, data)
 
         # Separate validated and non-validated
         validated = [h for h in tested_hypotheses if h.validated]
